@@ -85,6 +85,16 @@ def find_transits(t, f, k=4.0):
             cur = None
     if cur is not None:
         dips.append(cur)
+    # Merge fragments of one transit split by noise (gaps < 0.15 d).
+    merged = []
+    for d in dips:
+        if merged and d["start"] - merged[-1]["end"] < 0.15:
+            merged[-1]["end"] = d["end"]
+            merged[-1]["min_flux"] = min(merged[-1]["min_flux"], d["min_flux"])
+            merged[-1]["n"] += d["n"]
+        else:
+            merged.append(dict(d))
+    dips = [d for d in merged if d["n"] >= 2]
     out = []
     for d in dips:
         depth = med - d["min_flux"]
